@@ -1,0 +1,23 @@
+This repository will hold some of the tools I've written. If they're of some use to you, go for it. All of these tools are covered under the MIT License contained in the LICENSE file.
+
+h2. cidr2mask.sh
+
+A bash function for converting CIDR number to a netmask. I used this to make a more "user friendly" configuration for vpnc.
+
+h2. classfinder.rb
+
+Searches for a given class in the libraries connected to a maven project in eclipse. Useful for finding which libraries are defining conflicting classes. Which seems to happen a lot if you use java web services.
+
+h2. runbackup.rb
+
+The script that I use to backup matschaffer.com. It's very barebones and currently only supports backup of a folder and mysql database to sftp (as is the case on Dreamhost). To use it, make a configuration file called "wordpress.backup" and put it next to a file called "wordpress" and put something like this in it:
+
+  mysql :host => 'mysql.yourdomain.com',
+        :user => 'yourmysqluser', :password => 'yourmysqlpassword',
+        :database => 'yourmysqldatabase'
+  sftp  :host => 'backup.dreamhost.com', :user => 'yourbackupuser', :folder => 'backups'
+  keep  10
+
+Then run it with: ruby runbackup.rb /path/to/config
+
+Each of these is just a function call on the Backup object which defines the commands that will be run during the backup. The backup process is defined by the "start" method.
