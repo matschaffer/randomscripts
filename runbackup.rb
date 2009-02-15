@@ -8,7 +8,7 @@ class Backup
 
   def initialize(config_file)
     @log = Logger.new(STDOUT)
-    log.level = Logger::DEBUG
+    log.level = Logger::WARN
 
     # Assume project name is backup config name
     self.name = File.basename(config_file).split('.').first
@@ -29,7 +29,7 @@ class Backup
 
   def run(command)
     log.debug "Running #{command}"
-    system command
+    `#{command}`
   end
 
   def start
@@ -37,6 +37,7 @@ class Backup
     db_backup
     package_files
     archive_files
+    rotate_archives
     cleanup_temporary_files
   end
 
@@ -65,6 +66,19 @@ class Backup
     end
   end
 
+  def rotate_archives
+    if @number_to_keep and @archive_list_command
+      files = run(@archive_list_command).split(/\s+/)
+      files_to_keep = files[-@number_to_keep..-1]
+      if files_to_keep
+        files_to_remove = files - files_to_keep
+        log.info "Removing the following files to keep only #{@number_to_keep} files:"
+        log.info files_to_remove.join(", ")
+        files_to_remove.each { |f| run(@archive_remove_command % f) }
+      end
+    end
+  end
+
   def cleanup_temporary_files
     log.info "Cleaning up temporary files"
     @temporary_files.each do |file|
@@ -85,12 +99,21 @@ class Backup
   end
 
   def sftp(config)
-    sftp_command = "put #{package_filename}"
-    sftp_command += " #{config[:folder]}" if config[:folder]
+    sftp_put_command = "put #{package_filename}"
+    sftp_list_command = "ls"
+
+    if config[:folder]
+      sftp_put_command += " #{config[:folder]}"
+      sftp_list_command += " #{config[:folder]}"
+    end
+    
     sftp_host = ""
-    sftp_host += "#{config[:user]}@" 
+    sftp_host += "#{config[:user]}@" if config[:user]
     sftp_host += config[:host] 
-    @archive_command = "echo '#{sftp_command}' | sftp -b - #{sftp_host}" 
+    
+    @archive_command = "echo #{sftp_put_command} | sftp -b - #{sftp_host}" 
+    @archive_list_command = "echo #{sftp_list_command} | sftp -b - #{sftp_host} | grep -v sftp"
+    @archive_remove_command = "echo rm %s | sftp -b - #{sftp_host}"
   end
 end
 
