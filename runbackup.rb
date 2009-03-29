@@ -116,6 +116,13 @@ class Backup
     @archive_list_command = "echo #{sftp_list_command} | sftp -b - #{sftp_host} | grep -v sftp"
     @archive_remove_command = "echo rm %s | sftp -b - #{sftp_host}"
   end
+
+  def local(config)
+    raise "Must specify folder for local archiving" unless folder = config
+    @archive_command = "cp #{package_filename} #{folder}"
+    @archive_list_command = "find #{folder}"
+    @archive_remove_command = "rm %s"
+  end
 end
 
 ARGV.each { |f| Backup.new(f).start }
