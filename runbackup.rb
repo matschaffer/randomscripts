@@ -52,7 +52,7 @@ class Backup
 
   def db_backup
     if @db_command
-      dumpfile = File.join(root, "#{name}.db")
+      dumpfile = File.join(root, "#{name}.db.#{@db_type}")
       log.info "Backing up database"
       run "#{@db_command} > #{dumpfile}"
       @temporary_files << dumpfile
@@ -91,6 +91,7 @@ class Backup
   end
 
   def mysql(config)
+    @db_type = "mysql"
     @db_command = "mysqldump"
     @db_command += " -h#{config[:host]}" if config[:host]
     @db_command += " -u#{config[:user]}" if config[:user]
