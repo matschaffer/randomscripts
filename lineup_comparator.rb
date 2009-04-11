@@ -138,8 +138,10 @@ ssp.parse_zip(19335)
 dp = DACParser.new
 dp.parse_file('DAC 2_channel_3_27_09.txt')
 
+lineups_to_test = dp.lineups[3..3]
+
 match_sets = []
-dp.lineups.each_with_index do |lineup, i|  
+lineups_to_test.each_with_index do |lineup, i|  
   match_sets << ssp.lineups.first.compare(lineup)
 end
 
@@ -147,6 +149,6 @@ matching_channels = match_sets.map { |match_set| match_set.map { |match| match[:
 match_counts = Hash.new { |h,k| h[k] = 0 }
 
 matching_channels.each { |channel| match_counts[channel] += 1 }
-fully_matching_channels = match_counts.map { |k,v| k if v == 7 }.compact.sort
+fully_matching_channels = match_counts.map { |k,v| k if v == lineups_to_test.length }.compact.sort
 
-puts "Fully matching channels: #{fully_matching_channels.join(',')}"
+puts "Fully matching channels: #{fully_matching_channels.join(', ')} (#{fully_matching_channels.length})"
