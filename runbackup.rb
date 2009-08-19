@@ -113,14 +113,15 @@ class Backup
     sftp_host += config[:host] 
     
     @archive_command = "echo #{sftp_put_command} | sftp -b - #{sftp_host}" 
-    @archive_list_command = "echo #{sftp_list_command} | sftp -b - #{sftp_host} | grep -v sftp"
+    @archive_list_command = "echo #{sftp_list_command} | sftp -b - #{sftp_host} | grep '#{name}'"
     @archive_remove_command = "echo rm %s | sftp -b - #{sftp_host}"
   end
 
   def local(config)
     raise "Must specify folder for local archiving" unless folder = config
+    Dir.mkdir folder unless File.exist? folder
     @archive_command = "cp #{package_filename} #{folder}"
-    @archive_list_command = "find #{folder}"
+    @archive_list_command = "find #{folder} -type f | grep '#{name}'"
     @archive_remove_command = "rm %s"
   end
 end
