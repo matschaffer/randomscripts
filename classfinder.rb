@@ -5,12 +5,18 @@
 #
 # Useful for identifying conflicting class definitions across multiple jar files.
 
-classxml = File.read('.classpath')
+require 'pathname'
+require 'rubygems'
+require 'hpricot'
+
+classxml = Hpricot(File.read('.classpath'))
 badlib = ARGV.first
 
-classxml.scan(/M2_REPO(.*)"/).flatten.each do |jar|
- fullpath = "~/.m2/repository" + jar
- puts "Checking #{File.basename(fullpath)}"
- contents = `unzip -l #{fullpath}`
- puts "=== #{badlib} found in #{File.basename(jar)}" unless contents.scan(badlib.gsub(".", "/")).flatten.empty?
+classxml.search("classpathentry").each do |cpentry|
+  if Pathname.new(cpentry['path']).extname == '.jar'
+    jar = cpentry['path'].gsub('M2_REPO', '~/.m2/repository')
+    puts "Checking #{File.basename(jar)}"
+    contents = `unzip -l #{jar}`
+    puts "=== #{badlib} found in #{File.basename(jar)}" unless contents.scan(badlib.gsub(".", "/")).flatten.empty?
+  end
 end
