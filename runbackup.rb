@@ -121,7 +121,7 @@ class Backup
     raise "Must specify folder for local archiving" unless folder = config
     Dir.mkdir folder unless File.exist? folder
     @archive_command = "cp #{package_filename} #{folder}"
-    @archive_list_command = "find #{folder} -type f | grep '#{name}'"
+    @archive_list_command = "find #{folder} -type f | sort"
     @archive_remove_command = "rm %s"
   end
 end
