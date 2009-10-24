@@ -9,14 +9,23 @@ require 'pathname'
 require 'rubygems'
 require 'hpricot'
 
-classxml = Hpricot(File.read('.classpath'))
-badlib = ARGV.first
+needle = ARGV.first
 
-classxml.search("classpathentry").each do |cpentry|
-  if Pathname.new(cpentry['path']).extname == '.jar'
-    jar = cpentry['path'].gsub('M2_REPO', '~/.m2/repository')
-    puts "Checking #{File.basename(jar)}"
-    contents = `unzip -l #{jar}`
-    puts "=== #{badlib} found in #{File.basename(jar)}" unless contents.scan(badlib.gsub(".", "/")).flatten.empty?
+def lookfor(needle, jar)
+  basename = File.basename(jar)
+  puts "Checking #{basename}"
+  contents = `unzip -l #{jar}`
+  puts "=== #{needle} found in #{basename}" unless contents.scan(needle.gsub(".", "/")).flatten.empty?
+end
+
+begin
+  classxml = Hpricot(File.read('.classpath'))
+  classxml.search("classpathentry").each do |cpentry|
+    if Pathname.new(cpentry['path']).extname == '.jar'
+      lookfor needle, cpentry['path'].gsub('M2_REPO', '~/.m2/repository')
+    end
   end
+rescue Errno::ENOENT
+  # no .classpath, just loop over all the jars in pwd
+  Dir["*.jar"].each { |jar| lookfor needle, jar }
 end
